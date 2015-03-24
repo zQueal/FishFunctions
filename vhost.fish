@@ -1,5 +1,6 @@
 function options
   echo $argv | sed 's|--*|\\'\n'|g' | grep -v '^$'
+  return 0
 end
 
 function fhelp
@@ -22,10 +23,12 @@ function fhelp
   echo $green'    vhost '$yellow'-e '$blue'example.com '$normal'# Enables example.com'
   echo $green'    vhost '$yellow'-s /var/skel/nginx.conf '$blue'example.com '$normal'# Creates example.com using nginx.conf as a template'
   echo $green'    vhost '$yellow'-rm '$blue'example.com '$normal'# Removes example.com'\n
+  return 0
 end
 
 function fabout
-  echo 'I got tired of doing this manually. At the time of creating this I was learning about the fish shell. Don\'t judge me. '\n'https://github.com/zQueal'\n
+  echo I got tired of doing this manually. At the time of creating this I was learning about the fish shell. Don\'t judge me. \nhttps://github.com/zQueal
+  return 0
 end
 
 function vhost
@@ -55,6 +58,7 @@ function vhost
 		return 1
 	  end
         end
+	return 0
       case c create
 	touch /etc/nginx/sites-available/$value
 	ln -s /etc/nginx/sites-available/$value /etc/nginx/sites-enabled/$value
@@ -87,8 +91,10 @@ function vhost
 	  echo Could not write or create $value configuration. Exiting.
 	  return 1
 	end
+	return 0
       case a about
 	fabout
+	return 0
     end
   end 
 end
