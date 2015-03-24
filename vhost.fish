@@ -25,10 +25,7 @@ function fhelp
 end
 
 function fabout
-  echo 'I got tired of doing this manually. At the time of creating this I was learning about the fish shell. Don\'t judge me.'\n
-  echo 'Name: Zach Queal'
-  echo 'Email: zach.queal@gmail.com'
-  echo 'Github: https://github.com/zQueal'\n
+  echo 'I got tired of doing this manually. At the time of creating this I was learning about the fish shell. Don\'t judge me. '\n'https://github.com/zQueal'\n
 end
 
 function vhost
@@ -37,19 +34,59 @@ function vhost
     switch $option
       case h help
 	fhelp
+	return 0
       case l list
-	echo 'Available Sites: '
+	echo Available Sites:
 	echo (ls /etc/nginx/sites-available/)
-	echo \n'Enabled Sites: '
+	echo \nEnabled Sites:
 	echo (ls /etc/nginx/sites-enabled/)
+	return 0
       case rm remove
+	chown -R 1000 /etc/nginx/sites-available/
 	echo Removing $value...
 	if read_confirm
-	  # for i in $value[$i]; echo (count $i); end
-	  echo (count $value) # returns 1 reguardless of argv given
+	  if test -e /etc/nginx/sites-available/$value
+		rm /etc/nginx/sites-available/$value
+		rm /etc/nginx/sites-enabled/$value
+		echo $value has been removed.
+		return 0
+	  else
+		echo Could not remove $value... Does it exist?
+		return 1
+	  end
         end
       case c create
-	echo 'create'\n
+	touch /etc/nginx/sites-available/$value
+	ln -s /etc/nginx/sites-available/$value /etc/nginx/sites-enabled/$value
+	chown -R 1000 /etc/nginx/
+	begin
+	  echo 'server {
+	listen 80 default_server;
+	root /home/teamspeak/'$value';
+    	index index.php index.html index.htm;
+    	server_name '$value'; # FQDN
+    	location / {
+           try_files $uri $uri/ =404;
+    	}
+    	location ~ \.php$ {
+           try_files $uri =404;
+	   fastcgi_split_path_info ^(.+\.php)(/.+)$;
+           fastcgi_pass unix:/var/run/php5-fpm.sock;
+	   fastcgi_index index.php;
+           include fastcgi_params;
+    	}
+    	location ~ /\.ht {
+           deny all;
+    	}
+}'
+	end > /etc/nginx/sites-available/$value
+	if test -e /etc/nginx/sites-available/$value
+	  echo Complete!
+	  return 0
+	else
+	  echo Could not write or create $value configuration. Exiting.
+	  return 1
+	end
       case a about
 	fabout
     end
